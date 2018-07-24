@@ -1,48 +1,42 @@
 extends Node2D
 
-const SCORE_TO_WIN = 10
+const DEFAULT_PORT = 8910 # some random number, pick your port properly
+onready var player = load("res://paddle.tscn")
+var players = []
 
-var score_left = 0
-var score_right = 0
+func _connected_ok():
+	var id = get_tree().get_network_unique_id()
+	var new_player = player.instance()
+	new_player.set_name(str(id))
+	new_player.set_network_master(id)
+	$Players.add_child(new_player)
 
-signal game_finished()
+	# Registration of a client beings here, tell everyone that we are here
+	rpc("register_player", get_tree().get_network_unique_id())
 
-sync func update_score(add_to_left):
-	if add_to_left:
-		score_left += 1
-		get_node("score_left").set_text(str(score_left))
-	else:
-		
-		score_right += 1
-		get_node("score_right").set_text(str(score_right))
-		
-	var game_ended = false
-	
-	if score_left == SCORE_TO_WIN:
-		get_node("winner_left").show()
-		game_ended = true
-	elif score_right == SCORE_TO_WIN:
-		get_node("winner_right").show()
-		game_ended = true
-		
-	if game_ended:
-		get_node("exit_game").show()
-		get_node("ball").rpc("stop")
+remote func register_player(id):
+	players.append(id)
+	var new_player = player.instance()
+	new_player.set_name(str(id))
+	new_player.set_network_master(id)
+	$Players.add_child(new_player)
 
-func _on_exit_game_pressed():
-	emit_signal("game_finished")	
+remote func unregister_player(id):
+	var index = players.find(id)
+	if index > -1:
+		players.remove(index)
+	$Players.get_node(str(id)).queue_free()
+
+func join():
+	get_tree().connect("connected_to_server", self, "_connected_ok")
+	var ip = $Lobby/Window/Ip.text
+
+	var host = NetworkedMultiplayerENet.new()
+	host.set_compression_mode(NetworkedMultiplayerENet.COMPRESS_RANGE_CODER)
+	host.create_client(ip, DEFAULT_PORT)
+	get_tree().set_network_peer(host)
+	$Lobby.hide()
 
 func _ready():
-	# by default, all nodes in server inherit from master
-	# while all nodes in clients inherit from slave
-	if get_tree().is_network_server():		
-		#if in the server, get control of player 2 to the other peeer, this function is tree recursive by default
-		get_node("player2").set_network_master(get_tree().get_network_connected_peers()[0])
-	else:
-		#if in the client, give control of player 2 to itself, this function is tree recursive by default
-		get_node("player2").set_network_master(get_tree().get_network_unique_id())
-	
-	#let each paddle know which one is left, too
-	get_node("player1").left = true
-	get_node("player2").left = false
-	print("unique id: ", get_tree().get_network_unique_id())
+	# connect all the callbacks related to networking
+	$Lobby/Window/Join.connect("pressed", self, "join")
