@@ -10,8 +10,8 @@ config_version=3
 
 [application]
 
-config/name="Pong Multiplayer"
-run/main_scene="res://pong.tscn"
+config/name="Simple Server"
+run/main_scene="res://server.tscn"
 config/icon="res://icon.png"
 
 [display]

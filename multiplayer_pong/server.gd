@@ -19,8 +19,6 @@ func _player_disconnected(id):
 		rpc_id(p_id, "unregister_player", id)
 
 remote func register_player(id):
-	print(id)
-	print(players)
 	players.append(id)
 
 	var new_player = player.instance()
