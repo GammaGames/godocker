@@ -10,4 +10,4 @@ ADD build app
 
 EXPOSE 8910
 
-CMD ["./app/server.x86_64"]
+CMD ["./app/server2"]
