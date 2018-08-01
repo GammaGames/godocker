@@ -2,12 +2,13 @@ from ubuntu
 
 WORKDIR .
 
-ADD build app
+add build app
+add Godot_v3.0.6-stable_linux_server.64 godot
 
-# RUN apt-get update && apt-get install -y libx11-dev libxcursor-dev libxinerama-dev \
-#     libgl1-mesa-dev libglu-dev libasound2-dev libpulse-dev libfreetype6-dev libssl-dev libudev-dev \
-#     libxi-dev libxrandr-dev
-
+WORKDIR app
 EXPOSE 8910
 
-CMD ["./app/server2"]
+CMD ["./../godot", "--main-pack", "simple_server.pck", "-s"]
+
+# docker build -t simpleserver .
+# docker ps -q | xargs docker inspect --format '{{ .Id }} - {{ .Name }} - {{ .NetworkSettings.IPAddress }}'
